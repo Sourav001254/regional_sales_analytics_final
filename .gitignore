@@ -1,0 +1,23 @@
+# Node & Frontend
+node_modules/
+dist/
+.env
+
+# Python
+*.pyc
+__pycache__/
+.pytest_cache/
+coverage.xml
+
+# Data & DBs
+*.csv
+!data/synthetic_sales_data.csv
+sales_data.db
+
+# Output Artifacts
+eda_charts/
+advanced_outputs/
+*.pdf
+*.pptx
+pipeline.log
+cleaning_report.json

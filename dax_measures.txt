@@ -1,0 +1,86 @@
+=========================================================
+STAGE 4: DAX MEASURES FOR POWER BI
+=========================================================
+
+--- SALES KPIs ---
+Total Revenue = SUM(Sales[Revenue])
+Total Profit = SUM(Sales[Profit])
+Total Orders = DISTINCTCOUNT(Sales[Order_ID])
+Avg Order Value = DIVIDE([Total Revenue], [Total Orders], 0)
+Profit Margin % = DIVIDE([Total Profit], [Total Revenue], 0)
+Return Rate % = DIVIDE(CALCULATE([Total Orders], Sales[Return_Flag] = 1), [Total Orders], 0)
+Conversion Rate = DIVIDE([Total Orders], DISTINCTCOUNT(Sales[Customer_ID]), 0) /* Proxy based on unique customers */
+
+--- TIME INTELLIGENCE ---
+Revenue MTD = TOTALMTD([Total Revenue], 'Calendar'[Date])
+Revenue QTD = TOTALQTD([Total Revenue], 'Calendar'[Date])
+Revenue YTD = TOTALYTD([Total Revenue], 'Calendar'[Date])
+Revenue SPLY = CALCULATE([Total Revenue], SAMEPERIODLASTYEAR('Calendar'[Date]))
+MoM Growth % = DIVIDE([Total Revenue] - CALCULATE([Total Revenue], DATEADD('Calendar'[Date], -1, MONTH)), CALCULATE([Total Revenue], DATEADD('Calendar'[Date], -1, MONTH)), 0)
+QoQ Growth % = DIVIDE([Total Revenue] - CALCULATE([Total Revenue], DATEADD('Calendar'[Date], -1, QUARTER)), CALCULATE([Total Revenue], DATEADD('Calendar'[Date], -1, QUARTER)), 0)
+YoY Growth % = DIVIDE([Total Revenue] - [Revenue SPLY], [Revenue SPLY], 0)
+
+Rolling 3-Month Average Revenue = 
+CALCULATE(
+    AVERAGEX(VALUES('Calendar'[Month_Year]), [Total Revenue]),
+    DATESINPERIOD('Calendar'[Date], MAX('Calendar'[Date]), -3, MONTH)
+)
+
+Revenue Forecast =
+VAR _LastDate = MAX('Calendar'[Date])
+VAR _Slope =
+    DIVIDE(
+        SUMX(ALL('Calendar'), ('Calendar'[Date] - AVERAGE('Calendar'[Date])) * ([Total Revenue] - AVERAGEX(ALL('Calendar'), [Total Revenue]))),
+        SUMX(ALL('Calendar'), ('Calendar'[Date] - AVERAGE('Calendar'[Date])) ^ 2),
+        0
+    )
+VAR _Intercept = AVERAGEX(ALL('Calendar'), [Total Revenue]) - _Slope * AVERAGE('Calendar'[Date])
+RETURN _Intercept + _Slope * _LastDate
+
+--- ADVANCED DAX ---
+Top N Products by Revenue = 
+CALCULATE(
+    [Total Revenue],
+    TOPN(SELECTEDVALUE('TopNParameter'[TopN], 5), ALL(Sales[Product_Name]), [Total Revenue], DESC)
+)
+
+Sales Rep Performance Rank = 
+RANKX(ALL(Dim_SalesRep[Sales_Rep_Name]), [Total Revenue], , DESC, Dense)
+
+Customer Tier = 
+VAR RevenueCutoff_Top20 = PERCENTILEX.EXC(ALL(Sales[Customer_ID]), [Total Revenue], 0.8)
+VAR RevenueCutoff_Top50 = PERCENTILEX.EXC(ALL(Sales[Customer_ID]), [Total Revenue], 0.5)
+RETURN 
+SWITCH(TRUE(),
+    [Total Revenue] >= RevenueCutoff_Top20, "Platinum",
+    [Total Revenue] >= RevenueCutoff_Top50, "Gold",
+    [Total Revenue] > 0, "Standard",
+    "Inactive"
+)
+
+Region Contribution % = 
+DIVIDE([Total Revenue], CALCULATE([Total Revenue], ALL(Sales[Region])), 0)
+
+Discount Impact on Profit = 
+VAR SelectedDiscountAdjustment = SELECTEDVALUE(WhatIfDiscount[AdjustmentPct], 0)
+VAR AdjustedRevenue = SUMX(Sales, Sales[GrossRevenue] * (1 - (Sales[Discount_%] + SelectedDiscountAdjustment)))
+RETURN AdjustedRevenue - SUM(Sales[COGS])
+
+Sales Velocity = DIVIDE([Total Revenue], AVERAGE(Sales[Delivery_Days]), 0)
+
+=========================================================
+POWER QUERY M CODE FOR CALENDAR TABLE
+=========================================================
+// In Power Query > New Query > Blank Query:
+let
+    StartDate = #date(2021, 1, 1),EndDate   = #date(2024, 12, 31),
+    Duration  = Duration.Days(EndDate - StartDate) + 1,
+    Dates     = List.Dates(StartDate, Duration, #duration(1,0,0,0)),
+    Table     = Table.FromList(Dates, Splitter.SplitByNothing(), {"Date"}),
+    AddYear   = Table.AddColumn(Table,   "Year",       each Date.Year([Date]),   Int64.Type),
+    AddQtr    = Table.AddColumn(AddYear, "Quarter",    each "Q" & Text.From(Date.QuarterOfYear([Date]))),
+    AddMonth  = Table.AddColumn(AddQtr,  "Month",      each Date.Month([Date]),  Int64.Type),
+    AddMName  = Table.AddColumn(AddMonth,"Month_Name", each Date.ToText([Date], "MMM")),
+    AddWday   = Table.AddColumn(AddMName,"Weekday",    each Date.DayOfWeekName([Date]))
+in AddWday
+// Mark as Date Table on the 'Date' column

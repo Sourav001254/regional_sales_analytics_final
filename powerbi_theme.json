@@ -1,0 +1,75 @@
+{
+    "name": "Corporate Dark Navy & Gold",
+    "dataColors": [
+        "#D4AF37",
+        "#10B981",
+        "#3B82F6",
+        "#F43F5E",
+        "#8B5CF6",
+        "#F59E0B",
+        "#06B6D4",
+        "#64748B"
+    ],
+    "background": "#06101F",
+    "foreground": "#F8FAFC",
+    "tableAccent": "#D4AF37",
+    "visualStyles": {
+        "*": {
+            "*": {
+                "background": [
+                    {
+                        "color": { "solid": { "color": "#0A162B" } },
+                        "transparency": 0
+                    }
+                ],
+                "visualHeader": [
+                    {
+                        "foreground": { "solid": { "color": "#94A3B8" } },
+                        "background": { "solid": { "color": "#0A162B" } }
+                    }
+                ],
+                "outspacePane": [
+                    {
+                        "backgroundColor": { "solid": { "color": "#06101F" } },
+                        "foregroundColor": { "solid": { "color": "#F8FAFC" } }
+                    }
+                ],
+                "border": [
+                    {
+                        "show": true,
+                        "color": { "solid": { "color": "#1E293B" } },
+                        "radius": 8
+                    }
+                ],
+                "title": [
+                    {
+                        "show": true,
+                        "fontColor": { "solid": { "color": "#F8FAFC" } },
+                        "fontSize": 11,
+                        "fontFamily": "Segoe UI Semibold"
+                    }
+                ],
+                "labels": [
+                    {
+                        "color": { "solid": { "color": "#94A3B8" } }
+                    }
+                ]
+            }
+        },
+        "page": {
+            "*": {
+                "background": [
+                    {
+                        "color": { "solid": { "color": "#06101F" } },
+                        "transparency": 0
+                    }
+                ],
+                "outspace": [
+                    {
+                        "color": { "solid": { "color": "#06101F" } }
+                    }
+                ]
+            }
+        }
+    }
+}
