@@ -7,7 +7,7 @@
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
+    "clean": "powershell -NoProfile -Command \"Remove-Item -LiteralPath dist,server.js -Recurse -Force -ErrorAction SilentlyContinue\"",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
